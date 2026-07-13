@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AquaShine — Car Wash Management</title>
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<nav class="lp-nav">
+  <div class="container">
+    <div class="lp-brand"><span class="mark">💧</span> AquaShine</div>
+    <div class="lp-nav-links">
+      <a href="#features">Features</a>
+      <a href="#services">Services</a>
+      <a href="#how">How it works</a>
+      <a href="admin/login.html">Admin</a>
+    </div>
+    <div class="row" style="gap:10px;">
+      <a href="login.html" class="btn btn-outline btn-sm">Sign in</a>
+      <a href="login.html?tab=register" class="btn btn-sm">Get started</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="lp-hero">
+  <div class="container">
+    <div>
+      <span class="badge badge-info mb-2"><span class="dot"></span>Trusted by 12,000+ car owners</span>
+      <h1>Book a <span class="hl">sparkling clean</span> car wash in seconds</h1>
+      <p>AquaShine makes it effortless to book professional car wash and detailing services, manage your vehicles, and pay online — all from one dashboard.</p>
+      <div class="row">
+        <a href="login.html?tab=register" class="btn btn-lg">Book your first wash →</a>
+        <a href="#services" class="btn btn-outline btn-lg">View services</a>
+      </div>
+      <div class="pill-list mt-3">
+        <span class="pill">⭐ 4.9/5 rating</span>
+        <span class="pill">🚗 6 service types</span>
+        <span class="pill">💳 Secure online payment</span>
+      </div>
+    </div>
+    <div class="lp-hero-art">
+      🚙
+      <div class="float f1">✨ <span>Detailing done!</span></div>
+      <div class="float f2">💳 <span>Payment successful</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="lp-section" id="features">
+  <div class="container">
+    <h2>Everything you need in one place</h2>
+    <p class="sec-sub">A complete platform for customers and administrators to manage the entire car wash experience.</p>
+    <div class="feat-grid">
+      <div class="card feat-card card-hover">
+        <div class="fc-ic">📅</div><h3>Easy Booking</h3>
+        <p>Pick a service, choose your vehicle, and select a time slot in just a few taps.</p>
+      </div>
+      <div class="card feat-card card-hover">
+        <div class="fc-ic">🚗</div><h3>Vehicle Management</h3>
+        <p>Save all your vehicles and their details for lightning-fast future bookings.</p>
+      </div>
+      <div class="card feat-card card-hover">
+        <div class="fc-ic">💳</div><h3>Secure Payments</h3>
+        <p>Pay online via UPI, cards or net banking with instant receipts and history.</p>
+      </div>
+      <div class="card feat-card card-hover">
+        <div class="fc-ic">📊</div><h3>Admin Dashboard</h3>
+        <p>Powerful tools for staff to manage bookings, pricing, customers and reports.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Services preview -->
+<section class="lp-section" id="services" style="background:var(--bg-soft);">
+  <div class="container">
+    <h2>Our popular services</h2>
+    <p class="sec-sub">From a quick express wash to full ceramic coating — we've got your car covered.</p>
+    <div class="svc-grid" id="svcPreview"></div>
+    <div class="text-center mt-4">
+      <a href="login.html" class="btn btn-lg">See all services →</a>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="lp-section" id="how">
+  <div class="container">
+    <h2>How it works</h2>
+    <p class="sec-sub">Get your car cleaned in four simple steps.</p>
+    <div class="feat-grid">
+      <div class="card feat-card"><div class="fc-ic">1️⃣</div><h3>Sign up</h3><p>Create your free account in under a minute.</p></div>
+      <div class="card feat-card"><div class="fc-ic">2️⃣</div><h3>Choose a service</h3><p>Browse services and pick what your car needs.</p></div>
+      <div class="card feat-card"><div class="fc-ic">3️⃣</div><h3>Book a slot</h3><p>Select your vehicle, date and time.</p></div>
+      <div class="card feat-card"><div class="fc-ic">4️⃣</div><h3>Pay & relax</h3><p>Pay online and enjoy a spotless ride.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="lp-section">
+  <div class="container">
+    <div class="lp-cta">
+      <h2>Ready to give your car the shine it deserves?</h2>
+      <p>Join thousands of happy customers who book with AquaShine.</p>
+      <a href="login.html?tab=register" class="btn btn-lg" style="background:#fff;color:var(--primary-dark);">Create free account</a>
+    </div>
+  </div>
+</section>
+
+<footer class="lp-foot">
+  <div class="container">
+    <div class="lp-brand" style="justify-content:center;color:#fff;margin-bottom:12px;"><span class="mark">💧</span> AquaShine</div>
+    <p>© 2026 AquaShine Car Wash — Demo application. Frontend prototype for client review.</p>
+    <p class="mt-1" style="opacity:.7;">This is a UI/UX demo. No real payments or data are processed.</p>
+  </div>
+</footer>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+  const preview = DB.services().slice(0, 3);
+  document.getElementById('svcPreview').innerHTML = preview.map(s => `
+    <div class="card svc-card card-hover">
+      <div class="svc-thumb">${s.icon}${s.popular ? '<span class="badge badge-info pop">Popular</span>' : ''}</div>
+      <div class="svc-body">
+        <span class="svc-cat">${s.category}</span>
+        <h3>${s.name}</h3>
+        <p class="svc-desc">${s.desc}</p>
+        <div class="svc-meta">
+          <div class="svc-price">${App.money(s.price)}</div>
+          <div class="svc-dur">⏱️ ${s.duration} min</div>
+        </div>
+        <a href="login.html" class="btn btn-block">Book now</a>
+      </div>
+    </div>`).join('');
+</script>
+</body>
+</html>
