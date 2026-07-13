@@ -93,17 +93,17 @@ function panel() {
       ${methods.map(([m, ic]) => `<div class="pay-method ${state.method === m ? 'selected' : ''}" onclick="pick('method','${m}')"><div class="pm-ic">${ic}</div><div class="pm-name">${m}</div></div>`).join('')}
     </div>
     ${state.method === 'UPI' ? `
-      <div class="field"><label>UPI ID</label><input class="input" placeholder="yourname@upi" value="rahul@okhdfc"></div>`
+      <div class="field"><label>UPI ID</label><input class="input" value="demo@upi" readonly></div>`
     : state.method.includes('Card') ? `
-      <div class="field"><label>Card number</label><input class="input" placeholder="4242 4242 4242 4242" value="4242 4242 4242 4242"></div>
+      <div class="field"><label>Card number</label><input class="input" value="Demo — no card required" readonly></div>
       <div class="form-grid">
-        <div class="field"><label>Expiry</label><input class="input" placeholder="MM/YY" value="08/28"></div>
-        <div class="field"><label>CVV</label><input class="input" type="password" placeholder="•••" value="123"></div>
+        <div class="field"><label>Expiry</label><input class="input" value="—" readonly></div>
+        <div class="field"><label>CVV</label><input class="input" value="—" readonly></div>
       </div>`
     : `<div class="field"><label>Select bank</label><select class="select"><option>HDFC Bank</option><option>ICICI Bank</option><option>State Bank of India</option><option>Axis Bank</option></select></div>`}
     <div class="card card-pad" style="background:var(--success-bg);border-color:#bbf7d0;display:flex;gap:10px;align-items:center;">
-      <span style="font-size:1.3rem;">🔒</span>
-      <span class="small">Your payment is protected with 256-bit SSL encryption (simulated).</span>
+      <span style="font-size:1.3rem;">ℹ️</span>
+      <span class="small">This is a design demo. No real payment is processed and no card details are collected or sent anywhere.</span>
     </div>`;
   }
 }
