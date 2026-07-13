@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — AquaShine</title>
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+<div id="app-root"></div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+const root = App.shell({ role: 'customer', active: 'dashboard', title: 'Dashboard' });
+const c = DB.customer();
+const bookings = DB.bookings();
+const upcoming = bookings.filter(b => ['Confirmed','Pending'].includes(b.status));
+const completed = bookings.filter(b => b.status === 'Completed');
+const totalSpent = DB.payments().filter(p => p.status === 'Success').reduce((s,p) => s + p.amount, 0);
+
+const next = upcoming[0];
+const nextSvc = next ? DB.service(next.serviceId) : null;
+const nextVeh = next ? DB.vehicle(next.vehicleId) : null;
+
+root.innerHTML = `
+  <div class="page-head">
+    <h1>Welcome back, ${c.name.split(' ')[0]} 👋</h1>
+    <p>Here's what's happening with your car care.</p>
+  </div>
+
+  <div class="stats-grid mb-3">
+    <div class="stat"><div class="st-ic blue">🗓️</div><div class="st-val">${bookings.length}</div><div class="st-label">Total Bookings</div></div>
+    <div class="stat"><div class="st-ic amber">⏳</div><div class="st-val">${upcoming.length}</div><div class="st-label">Upcoming</div></div>
+    <div class="stat"><div class="st-ic green">✅</div><div class="st-val">${completed.length}</div><div class="st-label">Completed</div></div>
+    <div class="stat"><div class="st-ic cyan">💰</div><div class="st-val">${App.money(totalSpent)}</div><div class="st-label">Total Spent</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <!-- Next booking -->
+      <div class="card card-pad mb-3">
+        <div class="section-head"><h2>Next appointment</h2><a href="bookings.html" class="btn btn-ghost btn-sm">View all →</a></div>
+        ${next ? `
+        <div class="row" style="align-items:center;gap:18px;flex-wrap:nowrap;">
+          <div class="svc-thumb" style="width:88px;height:88px;border-radius:14px;font-size:2.2rem;flex-shrink:0;">${nextSvc.icon}</div>
+          <div class="grow">
+            <div class="between">
+              <div>
+                <h3 style="font-size:1.15rem;">${nextSvc.name}</h3>
+                <p class="muted small">${nextVeh.make} ${nextVeh.model} · ${nextVeh.plate}</p>
+              </div>
+              ${App.statusBadge(next.status)}
+            </div>
+            <div class="row mt-2" style="gap:20px;">
+              <span class="small">📅 <b>${App.date(next.date)}</b></span>
+              <span class="small">⏰ <b>${next.slot}</b></span>
+              <span class="small">💳 <b>${App.money(next.amount)}</b></span>
+            </div>
+          </div>
+        </div>` : `<div class="empty"><div class="em-ic">🗓️</div>No upcoming appointments. <br><a href="book.html" class="btn mt-2">Book a wash</a></div>`}
+      </div>
+
+      <!-- Recent bookings -->
+      <div class="card card-pad">
+        <div class="section-head"><h2>Recent bookings</h2><a href="bookings.html" class="btn btn-ghost btn-sm">View all →</a></div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>Booking</th><th>Service</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+            <tbody>
+              ${bookings.slice(0,4).map(b => { const s = DB.service(b.serviceId); return `
+                <tr>
+                  <td class="t-strong">${b.id}</td>
+                  <td>${s ? s.name : '—'}</td>
+                  <td>${App.date(b.date)}</td>
+                  <td class="t-strong">${App.money(b.amount)}</td>
+                  <td>${App.statusBadge(b.status)}</td>
+                </tr>`; }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <!-- Quick actions -->
+      <div class="card card-pad mb-3">
+        <h2 style="font-size:1.1rem;margin-bottom:14px;">Quick actions</h2>
+        <a href="book.html" class="btn btn-block mb-2">📅 Book a new wash</a>
+        <a href="services.html" class="btn btn-outline btn-block mb-2">🧴 Browse services</a>
+        <a href="vehicles.html" class="btn btn-outline btn-block mb-2">🚗 Add a vehicle</a>
+        <a href="payments.html" class="btn btn-outline btn-block">💳 Payment history</a>
+      </div>
+
+      <!-- Loyalty -->
+      <div class="card card-pad" style="background:linear-gradient(135deg,var(--primary-darker),var(--accent));color:#fff;border:none;">
+        <h2 style="font-size:1.1rem;color:#fff;">AquaShine Rewards ⭐</h2>
+        <p class="small" style="opacity:.9;margin:6px 0 14px;">You're 2 washes away from a free Premium Foam Wash!</p>
+        <div class="progress" style="background:rgba(255,255,255,.25);"><div class="bar" style="width:60%;background:#fff;"></div></div>
+        <p class="small mt-2" style="opacity:.9;">3 of 5 washes completed</p>
+      </div>
+    </div>
+  </div>`;
+</script>
+</body>
+</html>

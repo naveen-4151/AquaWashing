@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payments — AquaShine</title>
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+<div id="app-root"></div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+const root = App.shell({ role: 'customer', active: 'payments', title: 'Payments' });
+const pays = DB.payments();
+const paid = pays.filter(p => p.status === 'Success').reduce((s,p)=>s+p.amount,0);
+const pending = pays.filter(p => p.status === 'Pending').reduce((s,p)=>s+p.amount,0);
+const methodIcon = { 'UPI':'📱','Credit Card':'💳','Debit Card':'🏦','Net Banking':'🌐' };
+
+root.innerHTML = `
+  <div class="page-head"><h1>Payments & Receipts</h1><p>View your transaction history and download receipts.</p></div>
+  <div class="stats-grid mb-3">
+    <div class="stat"><div class="st-ic green">💰</div><div class="st-val">${App.money(paid)}</div><div class="st-label">Total Paid</div></div>
+    <div class="stat"><div class="st-ic amber">⏳</div><div class="st-val">${App.money(pending)}</div><div class="st-label">Pending</div></div>
+    <div class="stat"><div class="st-ic blue">🧾</div><div class="st-val">${pays.length}</div><div class="st-label">Transactions</div></div>
+    <div class="stat"><div class="st-ic cyan">🔁</div><div class="st-val">${pays.filter(p=>p.status==='Refunded').length}</div><div class="st-label">Refunds</div></div>
+  </div>
+  <div class="card"><div class="section-head" style="padding:18px 22px 0;"><h2>Transaction history</h2></div>
+    <div class="table-wrap"><table class="data">
+      <thead><tr><th>Transaction ID</th><th>Booking</th><th>Method</th><th>Date</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+      <tbody>${pays.map(p => `
+        <tr>
+          <td class="t-strong">${p.id}</td>
+          <td>${p.bookingId}</td>
+          <td>${methodIcon[p.method] || '💳'} ${p.method}</td>
+          <td>${App.date(p.date)}</td>
+          <td class="t-strong">${App.money(p.amount)}</td>
+          <td>${App.statusBadge(p.status)}</td>
+          <td><button class="btn btn-ghost btn-sm" onclick="receipt('${p.id}')">🧾 Receipt</button></td>
+        </tr>`).join('')}</tbody>
+    </table></div>
+  </div>`;
+
+function receipt(id) {
+  const p = pays.find(x => x.id === id);
+  const b = DB.bookings().find(x => x.id === p.bookingId);
+  const s = b ? DB.service(b.serviceId) : null;
+  const c = DB.customer();
+  App.modal(`
+    <div class="modal-head"><h3>Receipt</h3><button class="modal-close" onclick="App.closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="text-center mb-3">
+        <div style="font-size:1.4rem;font-weight:800;color:var(--primary-dark);">💧 AquaShine</div>
+        <p class="small muted">Car Wash & Detailing · GSTIN 29ABCDE1234F1Z5</p>
+      </div>
+      <div class="between mb-2">
+        <div><div class="small muted">Billed to</div><b>${c.name}</b><div class="small muted">${c.email}</div></div>
+        <div style="text-align:right;"><div class="small muted">Receipt #</div><b>${p.id}</b><div class="small muted">${App.date(p.date)}</div></div>
+      </div>
+      <div class="summary-line"><span class="lbl">${s ? s.name : 'Service'}</span><b>${App.money(Math.round(p.amount/1.18))}</b></div>
+      <div class="summary-line"><span class="lbl">GST (18%)</span><b>${App.money(p.amount - Math.round(p.amount/1.18))}</b></div>
+      <div class="summary-line"><span class="lbl">Payment method</span><b>${p.method}</b></div>
+      <div class="summary-line"><span class="lbl">Reference</span><b>${p.ref}</b></div>
+      <div class="summary-line total"><span>Total ${p.status === 'Refunded' ? 'Refunded' : 'Paid'}</span><span>${App.money(p.amount)}</span></div>
+      <div class="text-center mt-2">${App.statusBadge(p.status)}</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="App.closeModal()">Close</button>
+      <button class="btn" onclick="App.toast('Demo: receipt downloaded as PDF','success')">⬇️ Download PDF</button>
+    </div>`);
+}
+</script>
+</body>
+</html>

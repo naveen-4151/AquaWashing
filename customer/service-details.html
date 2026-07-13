@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Service Details — AquaShine</title>
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+<div id="app-root"></div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+const root = App.shell({ role: 'customer', active: 'services', title: 'Service Details' });
+const id = new URLSearchParams(location.search).get('id') || 'S2';
+const s = DB.service(id) || DB.services()[0];
+const related = DB.services().filter(x => x.id !== s.id).slice(0, 3);
+
+root.innerHTML = `
+  <a href="services.html" class="btn btn-ghost btn-sm mb-2">← Back to services</a>
+  <div class="grid-2">
+    <div>
+      <div class="card" style="overflow:hidden;">
+        <div class="svc-thumb" style="height:220px;font-size:5rem;">${s.icon}${s.popular ? '<span class="badge badge-info pop">Popular choice</span>' : ''}</div>
+        <div class="card-pad">
+          <span class="svc-cat">${s.category}</span>
+          <h1 style="font-size:1.7rem;margin:4px 0 10px;">${s.name}</h1>
+          <p style="color:var(--text-soft);">${s.desc}</p>
+
+          <h2 style="font-size:1.1rem;margin:24px 0 12px;">What's included</h2>
+          <div class="row" style="gap:10px;">
+            ${s.includes.map(i => `<div style="display:flex;align-items:center;gap:8px;width:calc(50% - 5px);font-size:.92rem;">
+              <span style="color:var(--success);font-weight:700;">✓</span> ${i}</div>`).join('')}
+          </div>
+
+          <h2 style="font-size:1.1rem;margin:24px 0 12px;">Why customers love it</h2>
+          <div class="row">
+            <div class="card card-pad grow" style="text-align:center;"><div style="font-size:1.4rem;">⭐ 4.9</div><div class="small muted">Avg. rating</div></div>
+            <div class="card card-pad grow" style="text-align:center;"><div style="font-size:1.4rem;">⏱️ ${s.duration}m</div><div class="small muted">Service time</div></div>
+            <div class="card card-pad grow" style="text-align:center;"><div style="font-size:1.4rem;">🛡️ Yes</div><div class="small muted">Satisfaction guarantee</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card card-pad mb-3" style="position:sticky;top:86px;">
+        <div class="muted small">Price</div>
+        <div class="svc-price" style="font-size:2.2rem;">${App.money(s.price)} <small>/ wash</small></div>
+        <div class="svc-dur mt-1" style="margin-bottom:16px;">⏱️ Approx. ${s.duration} minutes</div>
+        <a href="book.html?service=${s.id}" class="btn btn-block btn-lg mb-2">Book this service</a>
+        <a href="services.html" class="btn btn-outline btn-block">Compare services</a>
+        <div class="summary-line mt-2" style="border:none;"><span class="lbl">🚗 Suitable for</span><b>All vehicle types</b></div>
+        <div class="summary-line" style="border:none;padding-top:0;"><span class="lbl">📍 Location</span><b>AquaShine Center</b></div>
+      </div>
+    </div>
+  </div>
+
+  <h2 style="font-size:1.2rem;margin:30px 0 16px;">You might also like</h2>
+  <div class="svc-grid">
+    ${related.map(r => `
+      <div class="card svc-card card-hover">
+        <div class="svc-thumb">${r.icon}</div>
+        <div class="svc-body">
+          <span class="svc-cat">${r.category}</span>
+          <h3>${r.name}</h3>
+          <div class="svc-meta"><div class="svc-price">${App.money(r.price)}</div><div class="svc-dur">⏱️ ${r.duration} min</div></div>
+          <a href="service-details.html?id=${r.id}" class="btn btn-outline btn-block">View details</a>
+        </div>
+      </div>`).join('')}
+  </div>`;
+</script>
+</body>
+</html>

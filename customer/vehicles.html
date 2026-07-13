@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Vehicles — AquaShine</title>
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+<div id="app-root"></div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+const root = App.shell({ role: 'customer', active: 'vehicles', title: 'My Vehicles' });
+const icons = { SUV: '🚙', Sedan: '🚗', Hatchback: '🚘' };
+
+function render() {
+  const list = DB.vehicles();
+  root.innerHTML = `
+    <div class="between mb-3">
+      <div class="page-head" style="margin:0;"><h1>My Vehicles</h1><p>Manage the vehicles saved to your account.</p></div>
+      <button class="btn" onclick="editVehicle()">+ Add vehicle</button>
+    </div>
+    ${list.length ? `<div class="svc-grid">${list.map(v => `
+      <div class="card card-pad card-hover">
+        <div class="between mb-2">
+          <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#e0f2fe,#cffafe);display:grid;place-items:center;font-size:1.8rem;">${icons[v.type] || '🚗'}</div>
+          <span class="badge badge-muted">${v.type}</span>
+        </div>
+        <h3 style="font-size:1.15rem;">${v.make} ${v.model}</h3>
+        <p class="muted small">Year ${v.year}</p>
+        <div class="summary-line" style="border-bottom:1px dashed var(--border);"><span class="lbl">Number plate</span><b>${v.plate}</b></div>
+        <div class="summary-line" style="border:none;"><span class="lbl">Color</span><b>${v.color}</b></div>
+        <div class="row mt-2" style="gap:8px;">
+          <button class="btn btn-outline btn-sm grow" onclick="editVehicle('${v.id}')">Edit</button>
+          <a href="book.html" class="btn btn-sm grow">Book wash</a>
+          <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="removeVehicle('${v.id}')">🗑️</button>
+        </div>
+      </div>`).join('')}</div>` : `<div class="card"><div class="empty"><div class="em-ic">🚗</div>No vehicles yet. Add your first vehicle to start booking.</div></div>`}`;
+}
+
+function editVehicle(id) {
+  const v = id ? DB.vehicle(id) : { make:'', model:'', type:'Hatchback', color:'', plate:'', year:2024 };
+  App.modal(`
+    <div class="modal-head"><h3>${id ? 'Edit' : 'Add'} vehicle</h3><button class="modal-close" onclick="App.closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field"><label>Make</label><input class="input" id="vMake" value="${v.make}" placeholder="Toyota"></div>
+        <div class="field"><label>Model</label><input class="input" id="vModel" value="${v.model}" placeholder="Innova"></div>
+      </div>
+      <div class="form-grid">
+        <div class="field"><label>Type</label><select class="select" id="vType">${['Hatchback','Sedan','SUV'].map(t => `<option ${v.type===t?'selected':''}>${t}</option>`).join('')}</select></div>
+        <div class="field"><label>Year</label><input class="input" type="number" id="vYear" value="${v.year}"></div>
+      </div>
+      <div class="form-grid">
+        <div class="field"><label>Color</label><input class="input" id="vColor" value="${v.color}" placeholder="White"></div>
+        <div class="field"><label>Number plate</label><input class="input" id="vPlate" value="${v.plate}" placeholder="KA 01 AB 1234"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="App.closeModal()">Cancel</button>
+      <button class="btn" onclick="saveVehicle('${id || ''}')">${id ? 'Save changes' : 'Add vehicle'}</button>
+    </div>`);
+}
+function saveVehicle(id) {
+  const patch = { make: gv('vMake')||'New', model: gv('vModel')||'Vehicle', type: gv('vType'), year: +gv('vYear')||2024, color: gv('vColor')||'—', plate: gv('vPlate')||'KA 00 XX 0000' };
+  if (id) DB.updateVehicle(id, patch); else DB.addVehicle(patch);
+  App.closeModal(); App.toast(id ? 'Vehicle updated' : 'Vehicle added', 'success'); render();
+}
+function removeVehicle(id) {
+  App.confirm('Remove vehicle?', 'This vehicle will be removed from your account.', () => {
+    DB.deleteVehicle(id); App.toast('Vehicle removed', 'info'); render();
+  }, 'Remove', true);
+}
+function gv(id) { return document.getElementById(id).value.trim(); }
+render();
+</script>
+</body>
+</html>

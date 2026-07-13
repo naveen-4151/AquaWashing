@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book a Wash — AquaShine</title>
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+<div id="app-root"></div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+const root = App.shell({ role: 'customer', active: 'book', title: 'Book a Wash' });
+const services = DB.services();
+const vehicles = DB.vehicles();
+const slots = ['09:00 AM','10:30 AM','12:00 PM','02:00 PM','03:30 PM','05:00 PM'];
+
+const state = {
+  step: 1,
+  serviceId: new URLSearchParams(location.search).get('service') || null,
+  vehicleId: vehicles[0] ? vehicles[0].id : null,
+  date: '2026-07-20',
+  slot: null,
+  notes: '',
+  method: 'UPI'
+};
+if (state.serviceId) state.step = 2;
+
+const STEPS = ['Service', 'Vehicle', 'Schedule', 'Payment'];
+
+function stepsBar() {
+  return `<div class="steps">${STEPS.map((label, i) => {
+    const n = i + 1;
+    const cls = state.step === n ? 'active' : (state.step > n ? 'done' : '');
+    return `<div class="step ${cls}"><div class="num">${state.step > n ? '✓' : n}</div><div class="lbl">${label}</div></div>${i < STEPS.length-1 ? '<div class="bar"></div>' : ''}`;
+  }).join('')}</div>`;
+}
+
+function render() {
+  if (state.step === 5) return renderConfirm();
+  root.innerHTML = `
+    <div class="page-head"><h1>Book a Car Wash</h1><p>Complete the steps below to schedule your service.</p></div>
+    ${stepsBar()}
+    <div class="grid-2">
+      <div class="card card-pad" id="stepPanel">${panel()}</div>
+      <div>${summary()}</div>
+    </div>`;
+}
+
+function panel() {
+  if (state.step === 1) return `
+    <h2 class="mb-2">Choose a service</h2>
+    <div class="choice-grid">
+      ${services.map(s => `
+        <div class="choice ${state.serviceId === s.id ? 'selected' : ''}" onclick="pick('serviceId','${s.id}')">
+          <div style="font-size:1.6rem;">${s.icon}</div>
+          <h4>${s.name}</h4>
+          <p>${App.money(s.price)} · ${s.duration} min</p>
+        </div>`).join('')}
+    </div>`;
+
+  if (state.step === 2) return `
+    <div class="section-head"><h2>Select your vehicle</h2><button class="btn btn-outline btn-sm" onclick="addVehicle()">+ Add vehicle</button></div>
+    <div class="choice-grid">
+      ${vehicles.map(v => `
+        <div class="choice ${state.vehicleId === v.id ? 'selected' : ''}" onclick="pick('vehicleId','${v.id}')">
+          <div style="font-size:1.6rem;">${v.type === 'SUV' ? '🚙' : v.type === 'Sedan' ? '🚗' : '🚘'}</div>
+          <h4>${v.make} ${v.model}</h4>
+          <p>${v.plate} · ${v.color}</p>
+        </div>`).join('')}
+    </div>`;
+
+  if (state.step === 3) return `
+    <h2 class="mb-2">Pick a date & time</h2>
+    <div class="field"><label>Preferred date</label><input class="input" type="date" value="${state.date}" min="2026-07-13" onchange="state.date=this.value;render()"></div>
+    <div class="field"><label>Available time slots</label>
+      <div class="choice-grid">
+        ${slots.map(sl => `<div class="choice ${state.slot === sl ? 'selected' : ''}" style="text-align:center;padding:14px;" onclick="pick('slot','${sl}')"><h4 style="margin:0;">${sl}</h4></div>`).join('')}
+      </div>
+    </div>
+    <div class="field"><label>Special instructions (optional)</label>
+      <textarea class="textarea" placeholder="E.g. Please focus on the interior…" onchange="state.notes=this.value">${state.notes}</textarea>
+    </div>`;
+
+  if (state.step === 4) {
+    const methods = [['UPI','📱'],['Credit Card','💳'],['Debit Card','🏦'],['Net Banking','🌐']];
+    return `
+    <h2 class="mb-2">Payment</h2>
+    <p class="muted small mb-2">Select a payment method. <b>This is a demo — no real payment is processed.</b></p>
+    <div class="pay-methods">
+      ${methods.map(([m, ic]) => `<div class="pay-method ${state.method === m ? 'selected' : ''}" onclick="pick('method','${m}')"><div class="pm-ic">${ic}</div><div class="pm-name">${m}</div></div>`).join('')}
+    </div>
+    ${state.method === 'UPI' ? `
+      <div class="field"><label>UPI ID</label><input class="input" placeholder="yourname@upi" value="rahul@okhdfc"></div>`
+    : state.method.includes('Card') ? `
+      <div class="field"><label>Card number</label><input class="input" placeholder="4242 4242 4242 4242" value="4242 4242 4242 4242"></div>
+      <div class="form-grid">
+        <div class="field"><label>Expiry</label><input class="input" placeholder="MM/YY" value="08/28"></div>
+        <div class="field"><label>CVV</label><input class="input" type="password" placeholder="•••" value="123"></div>
+      </div>`
+    : `<div class="field"><label>Select bank</label><select class="select"><option>HDFC Bank</option><option>ICICI Bank</option><option>State Bank of India</option><option>Axis Bank</option></select></div>`}
+    <div class="card card-pad" style="background:var(--success-bg);border-color:#bbf7d0;display:flex;gap:10px;align-items:center;">
+      <span style="font-size:1.3rem;">🔒</span>
+      <span class="small">Your payment is protected with 256-bit SSL encryption (simulated).</span>
+    </div>`;
+  }
+}
+
+function summary() {
+  const s = state.serviceId ? DB.service(state.serviceId) : null;
+  const v = state.vehicleId ? DB.vehicle(state.vehicleId) : null;
+  const price = s ? s.price : 0;
+  const gst = Math.round(price * 0.18);
+  const total = price + gst;
+  const btnLabel = state.step === 4 ? `Pay ${App.money(total)}` : 'Continue →';
+  const canNext = ({1: !!state.serviceId, 2: !!state.vehicleId, 3: !!state.slot, 4: true})[state.step];
+  return `
+    <div class="card card-pad" style="position:sticky;top:86px;">
+      <h2 style="font-size:1.1rem;margin-bottom:14px;">Booking summary</h2>
+      <div class="summary-line"><span class="lbl">Service</span><b>${s ? s.name : '—'}</b></div>
+      <div class="summary-line"><span class="lbl">Vehicle</span><b>${v ? v.make + ' ' + v.model : '—'}</b></div>
+      <div class="summary-line"><span class="lbl">Date</span><b>${state.slot ? App.date(state.date) : '—'}</b></div>
+      <div class="summary-line"><span class="lbl">Time</span><b>${state.slot || '—'}</b></div>
+      <div class="summary-line"><span class="lbl">Service charge</span><b>${App.money(price)}</b></div>
+      <div class="summary-line"><span class="lbl">GST (18%)</span><b>${App.money(gst)}</b></div>
+      <div class="summary-line total"><span>Total</span><span>${App.money(total)}</span></div>
+      <button class="btn btn-block btn-lg mt-2" ${canNext ? '' : 'disabled'} onclick="nextStep()">${btnLabel}</button>
+      ${state.step > 1 ? `<button class="btn btn-ghost btn-block mt-1" onclick="prevStep()">← Back</button>` : ''}
+    </div>`;
+}
+
+function pick(key, val) { state[key] = val; render(); }
+function nextStep() {
+  if (state.step < 4) { state.step++; render(); }
+  else { processPayment(); }
+}
+function prevStep() { if (state.step > 1) { state.step--; render(); } }
+
+function processPayment() {
+  root.querySelector('#stepPanel').innerHTML = `<div class="empty"><div class="em-ic" style="animation:pop 1s infinite alternate;">⏳</div><h3>Processing payment…</h3><p class="muted">Please wait while we confirm your booking.</p></div>`;
+  setTimeout(() => {
+    const s = DB.service(state.serviceId);
+    const gst = Math.round(s.price * 0.18);
+    const total = s.price + gst;
+    const booking = DB.addBooking({
+      serviceId: state.serviceId, vehicleId: state.vehicleId, date: state.date, slot: state.slot,
+      status: 'Confirmed', amount: total, payStatus: 'Paid', notes: state.notes, method: state.method
+    });
+    state.newBooking = booking;
+    state.step = 5;
+    render();
+  }, 1600);
+}
+
+function renderConfirm() {
+  const b = state.newBooking;
+  const s = DB.service(b.serviceId), v = DB.vehicle(b.vehicleId);
+  root.innerHTML = `
+    <div class="card card-pad text-center" style="max-width:620px;margin:20px auto;">
+      <div style="width:80px;height:80px;border-radius:50%;background:var(--success-bg);color:var(--success);font-size:2.6rem;display:grid;place-items:center;margin:0 auto 16px;">✓</div>
+      <h1 style="font-size:1.6rem;">Booking Confirmed!</h1>
+      <p class="muted mb-3">Your car wash has been successfully booked and paid for.</p>
+      <div class="card card-pad" style="text-align:left;background:var(--bg-soft);">
+        <div class="between mb-2"><b>Booking ID</b><span class="badge badge-info">${b.id}</span></div>
+        <div class="summary-line"><span class="lbl">Service</span><b>${s.name}</b></div>
+        <div class="summary-line"><span class="lbl">Vehicle</span><b>${v.make} ${v.model} (${v.plate})</b></div>
+        <div class="summary-line"><span class="lbl">Date & Time</span><b>${App.date(b.date)} · ${b.slot}</b></div>
+        <div class="summary-line"><span class="lbl">Payment</span><b>${state.method} · ${App.statusBadge('Paid')}</b></div>
+        <div class="summary-line total"><span>Amount Paid</span><span>${App.money(b.amount)}</span></div>
+      </div>
+      <div class="row mt-3" style="justify-content:center;">
+        <a href="bookings.html" class="btn">View my bookings</a>
+        <a href="payments.html" class="btn btn-outline">Download receipt</a>
+        <a href="dashboard.html" class="btn btn-ghost">Back to dashboard</a>
+      </div>
+    </div>`;
+  App.toast('Payment successful — booking confirmed!', 'success');
+}
+
+function addVehicle() {
+  App.modal(`
+    <div class="modal-head"><h3>Add a vehicle</h3><button class="modal-close" onclick="App.closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field"><label>Make</label><input class="input" id="nvMake" placeholder="Toyota"></div>
+        <div class="field"><label>Model</label><input class="input" id="nvModel" placeholder="Innova"></div>
+      </div>
+      <div class="form-grid">
+        <div class="field"><label>Type</label><select class="select" id="nvType"><option>Hatchback</option><option>Sedan</option><option>SUV</option></select></div>
+        <div class="field"><label>Color</label><input class="input" id="nvColor" placeholder="White"></div>
+      </div>
+      <div class="field"><label>Number plate</label><input class="input" id="nvPlate" placeholder="KA 01 AB 1234"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="App.closeModal()">Cancel</button>
+      <button class="btn" onclick="saveVehicle()">Add vehicle</button>
+    </div>`);
+}
+function saveVehicle() {
+  const v = DB.addVehicle({
+    make: val('nvMake') || 'New', model: val('nvModel') || 'Vehicle', type: val('nvType'),
+    color: val('nvColor') || '—', plate: val('nvPlate') || 'KA 00 XX 0000', year: 2024
+  });
+  vehicles.push(v); state.vehicleId = v.id;
+  App.closeModal(); App.toast('Vehicle added', 'success'); render();
+}
+function val(id) { return document.getElementById(id).value.trim(); }
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile — AquaShine</title>
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+<div id="app-root"></div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+const root = App.shell({ role: 'customer', active: 'profile', title: 'Profile' });
+
+function render() {
+  const c = DB.customer();
+  const bookings = DB.bookings();
+  const spent = DB.payments().filter(p=>p.status==='Success').reduce((s,p)=>s+p.amount,0);
+  root.innerHTML = `
+    <div class="page-head"><h1>My Profile</h1><p>Manage your personal information and account settings.</p></div>
+    <div class="grid-2">
+      <div>
+        <div class="card card-pad mb-3">
+          <div class="section-head"><h2>Personal information</h2></div>
+          <div class="form-grid">
+            <div class="field"><label>Full name</label><input class="input" id="pName" value="${c.name}"></div>
+            <div class="field"><label>Phone</label><input class="input" id="pPhone" value="${c.phone}"></div>
+          </div>
+          <div class="field"><label>Email address</label><input class="input" id="pEmail" value="${c.email}"></div>
+          <div class="field"><label>Address</label><textarea class="textarea" id="pAddr">${c.address}</textarea></div>
+          <button class="btn" onclick="saveProfile()">Save changes</button>
+        </div>
+
+        <div class="card card-pad">
+          <div class="section-head"><h2>Security</h2></div>
+          <div class="form-grid">
+            <div class="field"><label>New password</label><input class="input" type="password" placeholder="••••••••"></div>
+            <div class="field"><label>Confirm password</label><input class="input" type="password" placeholder="••••••••"></div>
+          </div>
+          <button class="btn btn-outline" onclick="App.toast('Demo: password updated','success')">Update password</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="card card-pad text-center mb-3">
+          <div class="avatar" style="width:88px;height:88px;font-size:2rem;margin:0 auto 12px;">${c.avatar}</div>
+          <h3 style="font-size:1.2rem;">${c.name}</h3>
+          <p class="muted small">${c.email}</p>
+          <span class="badge badge-info mt-2"><span class="dot"></span>Active member</span>
+          <p class="small muted mt-2">Member since ${App.date(c.joined)}</p>
+        </div>
+        <div class="card card-pad">
+          <h2 style="font-size:1.1rem;margin-bottom:14px;">Account stats</h2>
+          <div class="summary-line"><span class="lbl">Total bookings</span><b>${bookings.length}</b></div>
+          <div class="summary-line"><span class="lbl">Vehicles saved</span><b>${DB.vehicles().length}</b></div>
+          <div class="summary-line"><span class="lbl">Total spent</span><b>${App.money(spent)}</b></div>
+          <div class="summary-line" style="border:none;"><span class="lbl">Reward points</span><b>⭐ 320</b></div>
+        </div>
+        <div class="card card-pad mt-3" style="border-color:#fecaca;">
+          <h2 style="font-size:1.1rem;color:var(--danger);margin-bottom:8px;">Danger zone</h2>
+          <p class="small muted mb-2">Permanently delete your account and all associated data.</p>
+          <button class="btn btn-danger btn-sm" onclick="App.confirm('Delete account?','This action cannot be undone.',()=>App.toast('Demo: account deletion requested','info'),'Delete',true)">Delete account</button>
+        </div>
+      </div>
+    </div>`;
+}
+function saveProfile() {
+  DB.updateProfile({
+    name: document.getElementById('pName').value.trim(),
+    phone: document.getElementById('pPhone').value.trim(),
+    email: document.getElementById('pEmail').value.trim(),
+    address: document.getElementById('pAddr').value.trim(),
+    avatar: App.initials(document.getElementById('pName').value.trim())
+  });
+  App.toast('Profile updated successfully', 'success');
+  render();
+}
+render();
+</script>
+</body>
+</html>

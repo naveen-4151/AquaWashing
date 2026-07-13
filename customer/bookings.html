@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Bookings — AquaShine</title>
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+<div id="app-root"></div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+const root = App.shell({ role: 'customer', active: 'bookings', title: 'My Bookings' });
+let filter = 'All';
+
+function render() {
+  const all = DB.bookings();
+  const list = filter === 'All' ? all : all.filter(b => b.status === filter);
+  const tabs = ['All','Confirmed','Pending','Completed','Cancelled'];
+  root.innerHTML = `
+    <div class="page-head"><h1>My Bookings</h1><p>Track and manage all your car wash appointments.</p></div>
+    <div class="between mb-3">
+      <div class="toolbar">
+        ${tabs.map(t => `<button class="btn ${t === filter ? '' : 'btn-outline'} btn-sm" onclick="setFilter('${t}')">${t}${t !== 'All' ? ` (${all.filter(b=>b.status===t).length})` : ''}</button>`).join('')}
+      </div>
+      <a href="book.html" class="btn btn-sm">+ New booking</a>
+    </div>
+    ${list.length ? `<div class="card"><div class="table-wrap"><table class="data">
+      <thead><tr><th>Booking ID</th><th>Service</th><th>Vehicle</th><th>Date & Time</th><th>Amount</th><th>Payment</th><th>Status</th><th></th></tr></thead>
+      <tbody>${list.map(b => { const s = DB.service(b.serviceId), v = DB.vehicle(b.vehicleId); return `
+        <tr>
+          <td class="t-strong">${b.id}</td>
+          <td>${s ? `${s.icon} ${s.name}` : '—'}</td>
+          <td>${v ? v.plate : '—'}</td>
+          <td>${App.date(b.date)}<div class="small muted">${b.slot}</div></td>
+          <td class="t-strong">${App.money(b.amount)}</td>
+          <td>${App.statusBadge(b.payStatus)}</td>
+          <td>${App.statusBadge(b.status)}</td>
+          <td class="t-actions">
+            <button class="btn btn-ghost btn-sm" onclick="viewBooking('${b.id}')">View</button>
+            ${['Confirmed','Pending'].includes(b.status) ? `<button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="cancelBooking('${b.id}')">Cancel</button>` : ''}
+          </td>
+        </tr>`; }).join('')}</tbody>
+    </table></div></div>` : `<div class="card"><div class="empty"><div class="em-ic">🗓️</div>No ${filter.toLowerCase()} bookings found.</div></div>`}`;
+}
+function setFilter(f) { filter = f; render(); }
+
+function viewBooking(id) {
+  const b = DB.bookings().find(x => x.id === id);
+  const s = DB.service(b.serviceId), v = DB.vehicle(b.vehicleId);
+  const steps = ['Booked','Confirmed','In Progress','Completed'];
+  const stageIdx = b.status === 'Completed' ? 3 : b.status === 'Confirmed' ? 1 : b.status === 'Cancelled' ? 1 : 0;
+  App.modal(`
+    <div class="modal-head"><h3>${b.id}</h3><button class="modal-close" onclick="App.closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="between mb-2"><h3 style="font-size:1.15rem;">${s.icon} ${s.name}</h3>${App.statusBadge(b.status)}</div>
+      <div class="summary-line"><span class="lbl">Vehicle</span><b>${v.make} ${v.model} (${v.plate})</b></div>
+      <div class="summary-line"><span class="lbl">Date & Time</span><b>${App.date(b.date)} · ${b.slot}</b></div>
+      <div class="summary-line"><span class="lbl">Amount</span><b>${App.money(b.amount)}</b></div>
+      <div class="summary-line"><span class="lbl">Payment</span><b>${b.payStatus}</b></div>
+      ${b.notes ? `<div class="summary-line"><span class="lbl">Notes</span><b style="max-width:60%;text-align:right;">${b.notes}</b></div>` : ''}
+      ${b.status !== 'Cancelled' ? `
+      <h4 style="margin:20px 0 14px;">Progress</h4>
+      <div class="timeline">
+        ${steps.map((st, i) => `<div class="tl-item ${i <= stageIdx ? 'done' : ''}"><div class="tl-title">${st}</div><div class="tl-time">${i <= stageIdx ? 'Done' : 'Pending'}</div></div>`).join('')}
+      </div>` : `<div class="card card-pad mt-2" style="background:var(--danger-bg);border-color:#fecaca;">This booking was cancelled and the amount was refunded.</div>`}
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="App.closeModal()">Close</button>
+      <a href="payments.html" class="btn btn-outline">View receipt</a>
+    </div>`);
+}
+function cancelBooking(id) {
+  App.confirm('Cancel booking?', 'This will cancel the appointment. In a real app the amount would be refunded.', () => {
+    DB.updateBooking(id, { status: 'Cancelled', payStatus: 'Refunded' });
+    App.toast('Booking cancelled', 'info'); render();
+  }, 'Yes, cancel', true);
+}
+render();
+</script>
+</body>
+</html>
