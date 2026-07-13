@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login — AquaShine</title>
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-hero" style="background:linear-gradient(135deg,#0f172a,#0369a1);">
+    <a href="../index.html" class="brand"><span>💧</span> AquaShine</a>
+    <h1>Admin Control Center</h1>
+    <p>Manage bookings, customers, services, pricing and payments — everything you need to run your car wash business.</p>
+    <div class="feat">
+      <div><span class="ic">📊</span> Real-time business dashboard</div>
+      <div><span class="ic">🗓️</span> Manage all customer bookings</div>
+      <div><span class="ic">🏷️</span> Control services & pricing</div>
+      <div><span class="ic">📈</span> Reports & analytics</div>
+    </div>
+  </div>
+
+  <div class="auth-form-side">
+    <div class="auth-card">
+      <span class="badge badge-info mb-2"><span class="dot"></span>Secure Admin Access</span>
+      <h2>Admin Sign in</h2>
+      <p class="sub">Authorized personnel only.</p>
+      <form onsubmit="return doLogin(event)">
+        <div class="field"><label>Admin email <span class="req">*</span></label><input class="input" type="email" value="admin@aquashine.com" required></div>
+        <div class="field"><label>Password <span class="req">*</span></label><input class="input" type="password" value="admin1234" required></div>
+        <div class="field"><label>2FA code <span class="req">*</span></label><input class="input" placeholder="6-digit code" value="123456" maxlength="6"></div>
+        <button class="btn btn-block btn-lg mt-1" type="submit">🔒 Secure sign in</button>
+      </form>
+      <p class="small muted text-center mt-3">Demo credentials pre-filled. Click <b>Secure sign in</b>.</p>
+      <p class="small muted text-center mt-2"><a href="../login.html" style="color:var(--primary-dark);">← Customer login</a> · <a href="../index.html" style="color:var(--primary-dark);">Home</a></p>
+    </div>
+  </div>
+</div>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+function doLogin(e) {
+  e.preventDefault();
+  App.toast('Welcome, Admin!', 'success');
+  setTimeout(() => window.location.href = 'dashboard.html', 700);
+  return false;
+}
+</script>
+</body>
+</html>

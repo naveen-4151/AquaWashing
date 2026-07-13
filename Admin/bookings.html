@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookings — Admin — AquaShine</title>
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+<div id="app-root"></div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+const root = App.shell({ role: 'admin', active: 'bookings', title: 'Booking Management' });
+let filter = 'All', query = '';
+const STATUSES = ['Pending','Confirmed','In Progress','Completed','Cancelled'];
+
+function render() {
+  const data = DB.all();
+  let list = data.adminBookings;
+  if (filter !== 'All') list = list.filter(b => b.status === filter);
+  if (query) list = list.filter(b => (b.customer + b.id + b.service).toLowerCase().includes(query.toLowerCase()));
+  const tabs = ['All', ...STATUSES];
+  root.innerHTML = `
+    <div class="page-head"><h1>Booking Management</h1><p>View, update and manage all customer bookings.</p></div>
+    <div class="between mb-3">
+      <div class="toolbar">${tabs.map(t => `<button class="btn ${t===filter?'':'btn-outline'} btn-sm" onclick="setFilter('${t}')">${t}</button>`).join('')}</div>
+      <div class="search-box"><span class="ic">🔍</span><input class="input" placeholder="Search bookings…" value="${query}" oninput="search(this.value)"></div>
+    </div>
+    <div class="card"><div class="table-wrap"><table class="data">
+      <thead><tr><th>Booking</th><th>Customer</th><th>Service</th><th>Vehicle</th><th>Date & Time</th><th>Amount</th><th>Payment</th><th>Status</th><th></th></tr></thead>
+      <tbody>${list.map(b => `
+        <tr>
+          <td class="t-strong">${b.id}</td>
+          <td><div class="cell-user"><span class="mini-avatar">${App.initials(b.customer)}</span>${b.customer}</div></td>
+          <td>${b.service}</td>
+          <td>${b.vehicle}</td>
+          <td>${App.date(b.date)}<div class="small muted">${b.slot}</div></td>
+          <td class="t-strong">${App.money(b.amount)}</td>
+          <td>${App.statusBadge(b.payStatus)}</td>
+          <td>${App.statusBadge(b.status)}</td>
+          <td><button class="btn btn-ghost btn-sm" onclick="manage('${b.id}')">Manage</button></td>
+        </tr>`).join('') || `<tr><td colspan="9"><div class="empty">No bookings match your filters.</div></td></tr>`}</tbody>
+    </table></div></div>`;
+}
+function setFilter(f){filter=f;render();}
+function search(v){query=v;render();}
+
+function manage(id) {
+  const b = DB.all().adminBookings.find(x => x.id === id);
+  App.modal(`
+    <div class="modal-head"><h3>${b.id}</h3><button class="modal-close" onclick="App.closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="summary-line"><span class="lbl">Customer</span><b>${b.customer}</b></div>
+      <div class="summary-line"><span class="lbl">Service</span><b>${b.service}</b></div>
+      <div class="summary-line"><span class="lbl">Vehicle</span><b>${b.vehicle}</b></div>
+      <div class="summary-line"><span class="lbl">Schedule</span><b>${App.date(b.date)} · ${b.slot}</b></div>
+      <div class="summary-line"><span class="lbl">Amount</span><b>${App.money(b.amount)}</b></div>
+      <div class="field mt-2"><label>Update booking status</label>
+        <select class="select" id="bkStatus">${STATUSES.map(s => `<option ${s===b.status?'selected':''}>${s}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>Assign staff</label>
+        <select class="select"><option>Ramesh K. (Bay 1)</option><option>Suresh P. (Bay 2)</option><option>Detailing Team A</option></select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="App.closeModal()">Cancel</button>
+      <button class="btn" onclick="saveStatus('${id}')">Save changes</button>
+    </div>`);
+}
+function saveStatus(id) {
+  const status = document.getElementById('bkStatus').value;
+  const d = DB.all();
+  const b = d.adminBookings.find(x => x.id === id);
+  b.status = status;
+  if (status === 'Completed') b.payStatus = 'Paid';
+  if (status === 'Cancelled') b.payStatus = 'Refunded';
+  DB.save(d);
+  App.closeModal(); App.toast('Booking updated to ' + status, 'success'); render();
+}
+render();
+</script>
+</body>
+</html>
