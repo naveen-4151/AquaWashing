@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing — Admin — AquaShine</title>
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+<div id="app-root"></div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+const root = App.shell({ role: 'admin', active: 'pricing', title: 'Pricing Management' });
+
+function render() {
+  const list = DB.services();
+  root.innerHTML = `
+    <div class="page-head"><h1>Pricing Management</h1><p>Update service prices, taxes and promotional discounts.</p></div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-head" style="padding:18px 22px 0;"><h2>Service pricing</h2><button class="btn btn-sm" onclick="saveAll()">💾 Save all changes</button></div>
+        <div class="table-wrap"><table class="data">
+          <thead><tr><th>Service</th><th>Category</th><th>Base price (₹)</th><th>Preview</th></tr></thead>
+          <tbody>${list.map(s => `
+            <tr>
+              <td class="t-strong">${s.icon} ${s.name}</td>
+              <td><span class="badge badge-muted">${s.category}</span></td>
+              <td><input class="input" style="width:120px;padding:8px 12px;" type="number" id="price_${s.id}" value="${s.price}"></td>
+              <td class="t-strong" id="prev_${s.id}">${App.money(Math.round(s.price*1.18))} <span class="small muted">incl. GST</span></td>
+            </tr>`).join('')}</tbody>
+        </table></div>
+      </div>
+
+      <div>
+        <div class="card card-pad mb-3">
+          <h2 style="font-size:1.1rem;margin-bottom:14px;">Tax settings</h2>
+          <div class="field"><label>GST rate (%)</label><input class="input" type="number" value="18"></div>
+          <div class="field" style="margin:0;"><label>Service tax label</label><input class="input" value="GST (18%)"></div>
+        </div>
+        <div class="card card-pad mb-3">
+          <h2 style="font-size:1.1rem;margin-bottom:14px;">Active promotions</h2>
+          <div class="summary-line"><span class="lbl">🎉 WEEKEND20</span><b>20% off</b></div>
+          <div class="summary-line"><span class="lbl">🆕 FIRST50</span><b>₹50 off</b></div>
+          <div class="summary-line" style="border:none;"><span class="lbl">⭐ Loyalty</span><b>5th wash free</b></div>
+          <button class="btn btn-outline btn-block mt-2" onclick="App.toast('Demo: add promo code','info')">+ Add promo code</button>
+        </div>
+        <div class="card card-pad" style="background:var(--info-bg);border-color:#bfdbfe;">
+          <p class="small"><b>💡 Tip:</b> Prices update the customer-facing service list instantly. GST is applied automatically at checkout.</p>
+        </div>
+      </div>
+    </div>`;
+
+  list.forEach(s => {
+    const inp = document.getElementById('price_' + s.id);
+    inp.oninput = () => {
+      const v = +inp.value || 0;
+      document.getElementById('prev_' + s.id).innerHTML = `${App.money(Math.round(v*1.18))} <span class="small muted">incl. GST</span>`;
+    };
+  });
+}
+function saveAll() {
+  DB.services().forEach(s => {
+    const v = +document.getElementById('price_' + s.id).value || s.price;
+    DB.updateService(s.id, { price: v });
+  });
+  App.toast('All prices updated successfully', 'success');
+  render();
+}
+render();
+</script>
+</body>
+</html>
