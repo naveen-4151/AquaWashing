@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login — AquaShine</title>
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+<div style="background:#fef3c7;color:#92400e;text-align:center;padding:9px 14px;font:600 13px/1.45 system-ui,-apple-system,sans-serif;">
+  ⚠️ Design demo only — <b>this is not a real admin portal</b>. Credentials are sample data and no real account is accessed.
+</div>
+<div class="auth-wrap">
+  <div class="auth-hero" style="background:linear-gradient(135deg,#0f172a,#0369a1);">
+    <a href="../index.html" class="brand"><span>💧</span> AquaShine</a>
+    <h1>Admin Control Center</h1>
+    <p>Manage bookings, customers, services, pricing and payments — everything you need to run your car wash business.</p>
+    <div class="feat">
+      <div><span class="ic">📊</span> Real-time business dashboard</div>
+      <div><span class="ic">🗓️</span> Manage all customer bookings</div>
+      <div><span class="ic">🏷️</span> Control services & pricing</div>
+      <div><span class="ic">📈</span> Reports & analytics</div>
+    </div>
+  </div>
+
+  <div class="auth-form-side">
+    <div class="auth-card">
+      <span class="badge badge-info mb-2"><span class="dot"></span>Admin preview (demo)</span>
+      <h2>Admin Sign in</h2>
+      <p class="sub">Demo admin panel — sample data only.</p>
+      <form onsubmit="return doLogin(event)">
+        <div class="field"><label>Admin email</label><input class="input" type="email" value="admin@aquashine.com" readonly></div>
+        <div class="field"><label>Password</label><input class="input" type="text" value="admin1234" readonly><span class="small muted">Demo value — not a real password field.</span></div>
+        <div class="field"><label>Access code</label><input class="input" type="text" placeholder="Demo code" value="123456" maxlength="6" readonly></div>
+        <button class="btn btn-block btn-lg mt-1" type="submit">Enter admin demo</button>
+      </form>
+      <p class="small muted text-center mt-3">Demo values pre-filled. Click <b>Enter admin demo</b>.</p>
+      <p class="small muted text-center mt-2"><a href="../login.html" style="color:var(--primary-dark);">← Customer login</a> · <a href="../index.html" style="color:var(--primary-dark);">Home</a></p>
+    </div>
+  </div>
+</div>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+function doLogin(e) {
+  e.preventDefault();
+  App.toast('Welcome, Admin!', 'success');
+  setTimeout(() => window.location.href = 'dashboard.html', 700);
+  return false;
+}
+</script>
+</body>
+</html>
